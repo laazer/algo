@@ -8,14 +8,11 @@ solve the min set cover problem.
 The way this code works by repeatedly taking the subset that
 includes the largest number of elements in the universe that the subsets in
 the result set of subsets have not yet inluded until a result that includes a set
-of subsets that includes every element in the universe can be returned.
+of subsets that includes every element in the universe can be returned.s
 """
 
-
-import numpy as np
 from random import randint
 from random import randrange
-from timeit import timeit
 import time
 import sys
 
@@ -97,9 +94,6 @@ def main(s, file):
         ss.append(randset(randint(0, int(len(uni)/2)), s))
         c = c - 1
     rs = []
-#    print 'read'
-#    print uni
-#    print ss
     time1 = time.time()
     rs = greedy(uni, ss)
     time2 = time.time()
