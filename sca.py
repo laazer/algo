@@ -8,7 +8,7 @@ solve the min set cover problem.
 The way this code works by repeatedly taking the subset that
 includes the largest number of elements in the universe that the subsets in
 the result set of subsets have not yet inluded until a result that includes a set
-of subsets that includes every element in the universe can be returned.s
+of subsets that includes every element in the universe can be returned.
 """
 
 from random import randint
@@ -86,7 +86,16 @@ def one_unknown(universe, s):
     return c
 
 
-def main(s, file):
+def ebay_q(set):
+    b = 0
+    c = 0
+    for i in set:
+        if i > b:
+            c = c + 1
+            b = i
+    return c
+
+def run_sca(s, file):
     uni = range(0, s)
     ss = []
     c = randint(0, 1000)
@@ -103,12 +112,27 @@ def main(s, file):
     print line
     
     
+def run_ebay(size, file):
+    s = randset(size, 5000)
+    r = ebay_q(s)
+    rs = "{0}, {1}".format(size, r)
+    print rs
+    file.write(rs + '\n')
+    
+#if __name__ == '__main__':
+#    f = open("data.csv", 'w')
+#    f.write("Time, Universe Size, Number of Subsets, Size of Result SuperSet \n")
+#    tests = [10, 25, 50, 100, 500, 1000]
+#    for i in tests:
+#        for j in range(10):
+#            run_sca(i, f)
+
 if __name__ == '__main__':
-    f = open("data.csv", 'w')
-    f.write("Time, Universe Size, Number of Subsets, Size of Result SuperSet \n")
-    tests = [10, 25, 50, 100, 500, 1000]
+    f = open("data2.csv", 'w')
+#    f.write("Size, Result \n")
+    print "Size, Result \n"
+    tests = range(1000)
     for i in tests:
-        for j in range(5):
-            main(i, f)
+        run_ebay(i, f)
     
     
