@@ -395,8 +395,8 @@ class custom_shape(shape):
         self.coords = shape_helper.mtc(matrix)
         
     def check_and_create(self, board):
-        self.color = None
-        self.color = random_color()
+        if(self.color == None):
+            self.color = random_color()
         return super(custom_shape, self).check_and_create(board, 
                                                      self.coords, 
                                                      self.color)
@@ -534,125 +534,6 @@ class square_shape(shape):
         pass
 
 
-class t_shape(shape):
-    
-    def __init__(self):
-        return
-
-    def check_and_create(self, board):
-        coords = coords = shape_helper.mtc([[1, 1, 1],
-                                            [0, 1, 0]])
-        return super(t_shape, self).check_and_create(board, coords,
-                'yellow')
-
-
-class l_shape(shape):
-
-    def __init__(self):
-        return
-    
-    def check_and_create(self, board):
-        coords = coords = shape_helper.mtc([[1, 1, 1],
-                                            [1, 0, 0]])
-        return super(l_shape, self).check_and_create(board, coords,
-                'orange')
-
-class reverse_l_shape(shape):
-    
-    def __init__(self):
-        return
-
-    def check_and_create(self, board):
-        coords = shape_helper.mtc([[1, 1, 1],
-                                   [0, 0, 1]])
-        return super(reverse_l_shape, self).check_and_create(board,
-                coords, 'green')
-
-
-class z_shape(shape_limited_rotate):
-    
-    def __init__(self):
-        return
-    
-    def check_and_create(self, board):
-        coords = shape_helper.mtc([[0, 1, 1],
-                                   [1, 1, 0]])
-        return super(z_shape, self).check_and_create(board, coords,
-                'purple')
-
-
-class s_shape(shape_limited_rotate):
-
-    def __init__(self):
-        return
-    
-    def check_and_create(self, board):
-        coords = shape_helper.mtc([[1,1,0], 
-                                   [0,1,1]])
-        return super(s_shape, self).check_and_create(board, coords,
-                'magenta')
-
-
-class i_shape(shape_limited_rotate):
-    
-    def __init__(self):
-        return
-    
-    def check_and_create(self, board):
-        coords = shape_helper.mtc([[1,1,1,1]])
-        return super(i_shape, self).check_and_create(board, coords,
-                'blue')
-
-class a_block(shape_limited_rotate):
-    
-    def __init__(self):
-        return
-    
-    def check_and_create(self, board):
-        coords = shape_helper.mtc([[1]])
-        return super(a_block, self).check_and_create(board, coords, random_color())
-    
-
-class j_shape(custom_shape):
-
-    def __init__(self):
-        super(j_shape, self).__init__([[0, 0, 1],
-                                       [0, 0, 1],
-                                       [0, 0, 1],
-                                       [1, 0, 1],
-                                       [1, 1, 1]], None)
-class a_shape(custom_shape):
-    
-    def __init__(self):
-        super(a_shape, self).__init__([[1, 1, 1],
-                                       [1, 0, 1],
-                                       [1, 1, 1],
-                                       [1, 0, 1],
-                                       [1, 0, 1]], None)
-class o_shape(custom_shape):
-    
-    def __init__(self):
-        super(o_shape, self).__init__([[1, 1, 1],
-                                       [1, 0, 1],
-                                       [1, 0, 1],
-                                       [1, 0, 1],
-                                       [1, 1, 1]], None)
-class c_shape(custom_shape):
-    
-    def __init__(self):
-        super(c_shape, self).__init__([[1, 1, 1],
-                                       [1, 0, 0],
-                                       [1, 0, 0],
-                                       [1, 0, 0],
-                                       [1, 1, 1]], None)
-class b_shape(custom_shape):
-    
-    def __init__(self):
-        super(b_shape, self).__init__([[1, 1, 1],
-                                       [1, 0, 1],
-                                       [1, 1, 0],
-                                       [1, 0, 1],
-                                       [1, 1, 1]], None)
 class test_shape(custom_shape):
     
     def __init__(self):
