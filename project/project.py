@@ -401,12 +401,19 @@ class custom_shape(shape):
                                                      self.coords, 
                                                      self.color)
 
-    
+
+Item_Class = enum(
+    HERB = "herb",
+    GRENADE = "grenade",
+    AMMO = "ammo",
+    WEAPON = "weapon")
+
+
 class game_item(custom_shape):
     
     #name:item name, cost:item price, fp:fire power, fs:fire speed, rs: reload speed, clip:clip size
     #stack: max stacking size
-    def __init__(self, name, cost, dimensions, fp=-1, fs=-1, rs=-1, clip=-1, stack=-1, color=random_color(), uid=randint(1, 10000)):
+    def __init__(self, name, cost, dimensions, fp=-1, fs=-1, rs=-1, clip=-1, stack=-1, color=random_color(), uid=randint(1, 10000), item_class=None):
         self.name = name
         self.cost = cost
         self.fp = fp
@@ -417,83 +424,90 @@ class game_item(custom_shape):
         
 class stack_item(game_item):
     
-    def __init__(self, name, cost, stack, dimensions):
+    def __init__(self, name, cost, stack, dimensions, item_class=Item_Class.WEAPON):
         self.current_size = 1
         super(stack_item, self).__init__(self, name=name, cost=cost, stack=stack, dimensions="1x2")
         
         
-class handgun(game_item):
+class weapon_item(game_item):
+    
+    def __init__(self, name, cost, dimensions, fp=-1, fs=-1, rs=-1, clip=-1, stack=-1, color=random_color(), uid=randint(1, 10000)):
+        self.current_size = 1
+        super(stack_item, self).__init__(self, name=name, cost=cost, stack=stack, dimensions="1x2", item_class=Item_Class.WEAPON)
+        
+        
+class handgun(weapon_item):
     
     def __init__(self):
-        super(handgun, self).init__(self, "handgun", 198000, "3x2", 1.0, 0.47, 1.73, 10)
+        super(handgun, self).init__(self, "handgun", 198000, "3x2", 1.0, 0.47, 1.73, 10, handgun_ammo().name)
         
 class red9(game_item):
     
     def __init__(self):
-        super(red9, self).init__(self, "red9", 335000, "4x2", 1.6, 0.53, 2.73, 8)
+        super(red9, self).init__(self, "red9", 335000, "4x2", 1.6, 0.53, 2.73, 8, handgun_ammo().name)
         
 class shotgun(game_item):
     
     def __init__(self):
-        super(shotgun, self).init__(self, "shotgun", 257000, "8x2", 4.0, 1.53, 3.03, 6)
+        super(shotgun, self).init__(self, "shotgun", 257000, "8x2", 4.0, 1.53, 3.03, 6, shotgun_ammo().name)
         
 class riotgun(game_item):
     
     def __init__(self):
-        super(riotgun, self).init__(self, "riotgun", 415000, "8x2", 5.0, 1.53, 3.03, 7)
+        super(riotgun, self).init__(self, "riotgun", 415000, "8x2", 5.0, 1.53, 3.03, 7, shotgun_ammo().name)
         
 class rifle(game_item):
     
     def __init__(self):
-        super(rifle, self).init__(self, "rifle", 296000, "9x1", 4.0, 2.73, 4.0, 5)
+        super(rifle, self).init__(self, "rifle", 296000, "9x1", 4.0, 2.73, 4.0, 5, rifle_ammo().name)
         
 #semi-auto rifle
 class rifle_sauto(game_item):
     
     def __init__(self):
-        super(rifle_sauto, self).init__(self, "rifle_sauto", 361000, "7x2", 7.0, 1.43, 2.33, 10)
+        super(rifle_sauto, self).init__(self, "rifle_sauto", 361000, "7x2", 7.0, 1.43, 2.33, 10, rifle_ammo().name)
         
 class killer7(game_item):
     
     def __init__(self):
-        super(killer7, self).init__(self, "killer7", 77700, "4x2", 25.0, 0.7, 1.83, 7)
+        super(killer7, self).init__(self, "killer7", 77700, "4x2", 25.0, 0.7, 1.83, 7, magnum_ammo().name)
         
-class handcannon(game_item):
+class hand_cannon(game_item):
     
     def __init__(self):
-        super(handcannon, self).init__(self, "handcannon", 779000, "4x2", 30.0, 1.17, 3.67, 3)
+        super(hand_cannon, self).init__(self, "hand_cannon", 779000, "4x2", 30.0, 1.17, 3.67, 3, magnum_ammo().name)
                 
 class reg_grenade(game_item):
     
     def __init__(self):
-        super(reg_grenade, self).init__(self, "reg_grenade", 5000, "1x2")
+        super(reg_grenade, self).init__(self, "reg_grenade", 5000, "1x2", tem_class=Item_Class.GRENADE)
         
 class flash_grenade(game_item):
     
     def __init__(self):
-        super(flash_grenade, self).init__(self, "flash_grenade", 5000, "1x2")
+        super(flash_grenade, self).init__(self, "flash_grenade", 5000, "1x2", tem_class=Item_Class.GRENADE)
         
 class fire_grenade(game_item):
     
     def __init__(self):
-        super(fire_grenade, self).init__(self, "fire_grenade", 5000, "1x2")
+        super(fire_grenade, self).init__(self, "fire_grenade", 5000, "1x2", item_class=Item_Class.GRENADE)
         
 class first_aid_spray(game_item):
     
     def __init__(self):
-        super(first_aid_spray, self).init__(self, "first_aid_spray", 7500, "1x2")
+        super(first_aid_spray, self).init__(self, "first_aid_spray", 7500, "1x2", item_class=Item_Class.HERB)
         
 #health item
 class green_herb(game_item):
     
     def __init__(self):
-        super(green_herb, self).init__(self, "green_herb", 5000, "1x2")
+        super(green_herb, self).init__(self, "green_herb", 5000, "1x2", item_class=Item_Class.HERB)
         
 #combined herb
 class sweet_green_herb(game_item):
     
     def __init__(self):
-        super(sweet_green_herb, self).init__(self, "sweet_green_herb", 7500, "1x2")
+        super(sweet_green_herb, self).init__(self, "sweet_green_herb", 7500, "1x2", item_class=Item_Class.HERB)
         
 class handgun_ammo(stack_item):
     
@@ -600,18 +614,13 @@ class game_controller(object):
             self.shapes.append(test_shape())
             
         self.item_universe = [
-            handgun, red9, shotgun]
+            handgun, red9, shotgun, riotgun, rifle,
+            rifle_sauto, killer7, hand_cannon, reg_grenade, flash_grenade,
+            fire_grenade, first_aid_spray, green_herb, sweet_green_herb, 
+            handgun_ammo, shotgun_ammo, rifle_ammo, magnum_ammo]
         
-        """
-        self.shapes = [
-            a_block(),
-            j_shape(),
-            a_shape(),
-            c_shape(),
-            o_shape(),
-            b_shape()
-        ]
-        """
+        self.attache = attache(self.item_universe, self.board)
+        
 
         #index of current shape
         self.shape_num = 0
