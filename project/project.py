@@ -606,32 +606,7 @@ class attache(object):
 		self.items = items
 		self.build = build
 		self.item_universe = item_universe
-        #self.build_dic = {Build.AOE_God:0, Build.Close_Combat:0, Build.Sustain:0}
-        #self.board = board
 	
-    """
-    def addItem(self, item):
-        #Do we add this item? TODO
-            self.items[item.uid] = item
-            pass
-
-    def remove_item(self, uid):
-        #TODO (is this needed)
-            del self.items[uid]
-            pass
-
-    def item_compare(self, itemA, itemB):
-        #TODO
-            pass
-
-    def choose_build(self):
-        #TODO
-            pass
-
-    def check_capacity(self):
-        #TODO 
-            pass
-    """
     
     def reduce_and_sort(self):
         wl = []
@@ -690,6 +665,7 @@ class attache(object):
     def total_weight(self, item_list):
         return sum(map(lambda i: i.size(), item_list))
     
+    #runs a version of George Dantzig's unbounded knapsack problem solution
     def optomize(self, item_list, max_wieght):
         ls = []
         for i in range(len(item_list)):
@@ -712,10 +688,6 @@ class attache(object):
             ls.pop()
         return ls
     
-                       
-                        
-    
-
         
 class game_controller(object):
 
@@ -734,7 +706,8 @@ class game_controller(object):
 
         self.board = Board(parent, scale=SCALE, max_x=MAXX, max_y=MAXY,
                            offset=OFFSET)
-            
+        
+        #stable roomate problem build ranking table for each item
         self.item_universe = {
             handgun: [Build.Sustain, Build.Close_Combat, Build.AOE_God], 
             red9: [Build.Sustain, Build.Close_Combat, Build.AOE_God], 
@@ -887,7 +860,6 @@ class game_controller(object):
                 self.corner_flip()
             while(cs.blocks[0].id == self.change_shape().blocks[0].id and cnt > 0):
                 if(place[0] <= WINX - (self.shape.max_width + 1)):
-                #if(place[0] <= WINX):
                     self.handle_move(RIGHT)
                     place[0] = place[0] + 1
                 elif(place[2] <= MAXY):
@@ -936,7 +908,6 @@ class game_controller(object):
 
 if __name__ == '__main__':
     f = open("data.csv", 'w')
-
     #root.title('Best thing EVER!!!!')
     sizes = [50, 100, 200, 500, 1000]
     f.write("item count, time, free space\n")
@@ -947,10 +918,8 @@ if __name__ == '__main__':
             theGame = game_controller(root, size)
             theGame.easy_place()
             t2 = time()
-            line = "{0}, {1}, {2}\n".format(size, t2 - t1, theGame.board.count_free_space().value - ((MAXX - WINX) * MAXY))
+            line = "{0}, {1}, {2}".format(size, t2 - t1, theGame.board.count_free_space().value - ((MAXX - WINX) * MAXY))
             print line
-            f.write(line)
+            f.write(line + '\n')
             root.destroy()
-    
-    
     root.mainloop()
