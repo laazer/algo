@@ -143,6 +143,9 @@ class Board(Frame):
             for j in range(len(self.collision_matrix[i])):
                 if(self.collision_matrix[i][j] > 1):
                     return True
+                if(j > WINX):
+                    if(self.collision_matrix[i][j] >= 1):
+                        return True
         return False
     
     def update_collison_matrix(self, x, y, inc=1):
