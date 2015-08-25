@@ -872,6 +872,10 @@ class game_controller(object):
     
     
     def easy_place(self):
+        self.easy_place_helper()
+        self.easy_place_helper()
+    
+    def easy_place_helper(self):
         place = [0, 0, 0, 0]
         #left, right, up, down
         cs = self.shape #current shape
@@ -900,6 +904,7 @@ class game_controller(object):
             cnt.r()
             flip = not flip
             cs = self.shape
+        
                 
     def move_to_edge(self):
         cnt = counter()
