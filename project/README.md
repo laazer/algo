@@ -9,4 +9,16 @@ Inspired by the inventory system in the game Resident Evil 4, we decided to appl
 
 
 ###Running:
-Just use 'python project.py' to run. The project outputs in the format of a csv file that includes the runtime data for the algorithm.
+####Time Run
+Running 'python project.py' will preform a time run printing the time results to the console and to a data.csv file
+
+####GUI Run
+Running 'python project.py -g' will preform a GUI run
+#####Controls
+- Up => move piece up
+- Down => move piece down
+- Left => move piece left
+- Right => move piece right
+- a => rotate piece clockwise
+- s => rotate piece counterclockwise
+- x => run placement algorithm
