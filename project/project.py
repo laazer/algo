@@ -759,8 +759,6 @@ class game_controller(object):
         self.parent.bind('s', self.s_callback)
         self.parent.bind('p', self.p_callback)
         self.parent.bind('x', self.x_callback)
-        self.parent.bind('z', self.z_callback)
-        self.parent.bind('f', self.f_callback)
 
         self.shape = self.get_next_shape()
 
@@ -812,12 +810,6 @@ class game_controller(object):
         
     def x_callback(self, event):
         self.easy_place()
-        
-    def z_callback(self, event):
-        self.move_to_corner()
-        
-    def f_callback(self, event):
-        self.corner_flip()
 
     def move_my_shape(self):
         if self.shape:
@@ -910,7 +902,7 @@ class game_controller(object):
             self.handle_move(DOWN)
         
 
-if __name__ == '__main__':
+def time_run():
     f = open("data.csv", 'w')
     #root.title('Best thing EVER!!!!')
     sizes = [50, 100, 200, 500, 1000]
@@ -927,3 +919,21 @@ if __name__ == '__main__':
             f.write(line + '\n')
             root.destroy()
     root.mainloop()
+            
+            
+def gui_run():
+    root = Tk()
+    root.title('Best thing EVER!!!!')
+    theGame = game_controller(root)
+    root.mainloop()
+
+
+if __name__ == '__main__':
+    if(len(sys.argv) > 1):
+        if(sys.argv[1] == "-g"):
+            gui_run()
+    else:
+        time_run()
+    
+    
+    
