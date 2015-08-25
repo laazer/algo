@@ -56,6 +56,48 @@ def random_color():
 def enum(**enums):
     return type('Enum', (), enums)
 
+class counter(object):
+    def __init__(self, start=0):
+        self.default = start
+        self.value = start
+        
+    #increment
+    def i(self, i=1):
+        self.value = self.value + i
+        
+    #decrement 
+    def d(self, i=1):
+        self.value = self.value - i
+        
+    #reset
+    def r(self):
+        self.value = self.default
+        
+    #override methods
+    def __eq__(self, other):
+        return self.value == other
+        
+    def __ne__(self, other):
+        return not self.__eq__(other)
+    
+    def __repr__(self):
+        return str(self.value)
+    
+    def __call__(self):
+        return self.value
+    
+    def __lt__(self, other):
+        return self.value < other
+    
+    def __le__(self, other):
+        return self.value <= other
+    
+    def __gt__(self, other):
+        return self.value > other
+    
+    def __ge__(self, other):
+        return self.value >= other
+
 class Board(Frame):
 
     """
@@ -101,15 +143,24 @@ class Board(Frame):
     def update_collison_matrix(self, x, y, inc=1):
             self.collision_matrix[y][x] = self.collision_matrix[y][x] + inc
             
+    def free_space(self):
+        cnt = counter()
+        for i in range(len(self.collision_matrix)):
+            for j in range(len(self.collision_matrix[i])):
+                if(self.collision_matrix[i][j] > 0):
+                    cnt.i()
+        return cnt
+        
+            
     def get_corner(self):
         return self.collision_matrix[0][0]
             
     def count_free_space(self):
-        cnt = 0
+        cnt = counter()
         for i in collision_matrix:
             for j in i:
                 if not j:
-                    cnt = cnt + 1
+                    cnt.i()
         return cnt
     
     def output(self):
@@ -263,7 +314,12 @@ class shape(object):
             block.y = y
 
         return True
+    
+    
+    def size(self):
+        return len(self.coords)
 
+    
     def rotate(self, clockwise=True):
         """
         Rotate the blocks around the 'middle' block, 90-degrees. The
@@ -392,7 +448,8 @@ class custom_shape(shape):
     
     def __init__(self, matrix, color=random_color()):
         self.color = color
-        self.coords = shape_helper.mtc(matrix)
+        self.matrix = matrix
+        self.coords = shape_helper.mtc(self.matrix)
         
     def check_and_create(self, board):
         if(self.color == None):
@@ -400,6 +457,12 @@ class custom_shape(shape):
         return super(custom_shape, self).check_and_create(board, 
                                                      self.coords, 
                                                      self.color)
+    
+    def max_width(self):
+        return max(map(lambda a: len(a), self.matrix))
+    
+    def max_hieght(self):
+        return len(matrix)
 
 
 Item_Class = enum(
@@ -422,11 +485,24 @@ class game_item(custom_shape):
         self.uid = uid
         super(game_item, self).__init__(shape_helper.string_to_matrix(dimensions))
         
+    def __eq__(self, other):
+        return self.name == other.name
+        
 class stack_item(game_item):
     
     def __init__(self, name, cost, stack, dimensions, item_class=Item_Class.WEAPON):
         self.current_size = 1
         super(stack_item, self).__init__(self, name=name, cost=cost, stack=stack, dimensions="1x2")
+        
+    def push(self, item):
+        rem = self.clip - self.stack
+        if item.stack >= rem:
+            self.stack = self.clip
+            item.stack = item.stack - rem
+        else:
+            self.stack = self.stack + item.stack
+            item.stack = 0
+        
         
         
 class weapon_item(game_item):
@@ -480,12 +556,12 @@ class hand_cannon(game_item):
 class reg_grenade(game_item):
     
     def __init__(self):
-        super(reg_grenade, self).init__(self, "reg_grenade", 5000, "1x2", tem_class=Item_Class.GRENADE)
+        super(reg_grenade, self).init__(self, "reg_grenade", 5000, "1x2", item_class=Item_Class.GRENADE)
         
 class flash_grenade(game_item):
     
     def __init__(self):
-        super(flash_grenade, self).init__(self, "flash_grenade", 5000, "1x2", tem_class=Item_Class.GRENADE)
+        super(flash_grenade, self).init__(self, "flash_grenade", 5000, "1x2", item_class=Item_Class.GRENADE)
         
 class fire_grenade(game_item):
     
@@ -557,38 +633,120 @@ class test_shape(custom_shape):
 Build = enum(
 	AOE_God=1, #lots of AOE damage
 	Close_Combat=2, #low range
-	Assasin=3) #sneaky (flash-bangs and handguns)
+	Sustain=3) #sneaky (flash-bangs and handguns)
     
     
 class attache(object):
     
-	def __init__(self, item_universe, board):
-		self.items = {} #map of uids to items
-		self.build = None
+    def __init__(self, item_universe, build, board, items):
+		self.items = items
+		self.build = build
 		self.item_universe = item_universe
-		self.board = board
+        #self.build_dic = {Build.AOE_God:0, Build.Close_Combat:0, Build.Sustain:0}
+        #self.board = board
 	
-	def addItem(self, item):
+    """
+    def addItem(self, item):
         #Do we add this item? TODO
-            self.items.append(item.uid, item)
+            self.items[item.uid] = item
             pass
-	
-	def remove_item(self, uid):
+
+    def remove_item(self, uid):
         #TODO (is this needed)
+            del self.items[uid]
             pass
-		
-	def item_compare(self, itemA, itemB):
-		#TODO
+
+    def item_compare(self, itemA, itemB):
+        #TODO
             pass
-		
-	def choose_build(self):
-		#TODO
+
+    def choose_build(self):
+        #TODO
             pass
-		
-	def check_capacity(self):
-		#TODO 
+
+    def check_capacity(self):
+        #TODO 
             pass
-        
+    """
+    
+    def reduce_and_sort(self):
+        wl = []
+        gl = []
+        hl = []
+        al = []
+        il = {Item_Class.WEAPON: wl,
+                Item_Class.GRENADE: gl,
+                Item_Class.HERB: hl,
+                Item_Class.AMMO: al}
+        #reduces items to individual lists
+        for item in self.items:
+            if item.item_class == Item_Class.WEAPON:
+                if not item in wl:
+                    wl.append(item)
+            if item.item_class == Item_Class.GRENADE:
+                gl.append(item)
+            if item.item_class == Item_Class.HERB:
+                hl.append(item)
+            if item.item_class == Item_Class.AMMO:
+                if item.clip == item.stack: #checks if the stack is full
+                    al.append(item)
+                for a in al:
+                    if item.stack == 0:
+                        break
+                    if a == item and a.stack < a.clip:
+                        a.push(item)
+                if item.stack > 0:
+                    al.append(item)
+        #optimizes item selecttion
+        size = counter(WINX * MAXY)
+        result = []
+        tmp = []
+        for key in il.keys():
+            ls = il[key]
+            if len(ls) > 0:
+                if key == Item_Class.WEAPON:
+                    tmp = self.optomize(ls, int(size/2))
+                    size.d(total_weight(tmp)
+                    result = result + tmp[0:2]
+                elif key == Item_Class.AMMO:
+                    tmp = self.optomize(ls, int(size/2))
+                    size.d(total_weight(tmp)
+                    result = result + tmp
+                elif key == Item_Class.HERB:
+                    tmp = self.optomize(ls, int(size/2)
+                    size.d(total_weight(tmp)
+                    result = result + tmp
+                elif key == Item_Class.GRENADE:
+                    tmp = self.optomize(ls, size)
+                    size.d(total_weight(tmp)
+                    result = result + tmp
+                    
+                    
+    def optomize(self, item_list, max_wieght):
+        ls = []
+        for i in range(len(item_list)):
+            item = item_list[i]
+            key = item.__class__
+            if len(ls) == 0:
+                ls.append(item)
+            else:
+                for j in range(len(ls)):
+                    key2 = ls[j].__class__
+                    if self.item_universe[key].index(item.item_class) < self.item_universe[key2].index(ls[j].item_class):
+                        ls.insert(j, item)
+                        break
+                    elif j == (len(ls) - 1):
+                        ls.append(ls[j])
+        while(self.total_weight(ls) > max_wieght):
+            ls.pop()
+        return ls
+    
+    def total_weight(self, item_list):
+        return sum(map(lambda i: i.size))
+                       
+                        
+    
+
         
 class game_controller(object):
 
@@ -613,13 +771,28 @@ class game_controller(object):
         for i in range(40):
             self.shapes.append(test_shape())
             
-        self.item_universe = [
-            handgun, red9, shotgun, riotgun, rifle,
-            rifle_sauto, killer7, hand_cannon, reg_grenade, flash_grenade,
-            fire_grenade, first_aid_spray, green_herb, sweet_green_herb, 
-            handgun_ammo, shotgun_ammo, rifle_ammo, magnum_ammo]
+        self.item_universe = {
+            handgun: [Build.Sustain, Build.Close_Combat, Build.AOE_God], 
+            red9: [Build.Sustain, Build.Close_Combat, Build.AOE_God], 
+            shotgun: [Build.AOE_God, Build.Close_Combat, Build.Sustain], 
+            riotgun: [Build.AOE_God, Build.Close_Combat, Build.Sustain], 
+            rifle: [Build.Sustain, Build.Close_Combat, Build.AOE_God],
+            rifle_sauto: [Build.Sustain, Build.Close_Combat, Build.AOE_God],
+            killer7: [Build.Close_Combat, Build.AOE_God, Build.Sustain], 
+            hand_cannon: [Build.Close_Combat, Build.AOE_God, Build.Sustain], 
+            reg_grenade: [Build.Sustain, Build.AOE_God, Build.Close_Combat], 
+            flash_grenade: [Build.Close_Combat, Build.Sustain, Build.AOE_God],
+            fire_grenade: [Build.AOE_God, Build.Close_Combat, Build.Sustain], 
+            first_aid_spray: [], #empty list == good in all builds
+            green_herb: [], 
+            sweet_green_herb: [], 
+            handgun_ammo: [Build.Sustain, Build.Close_Combat, Build.AOE_God], 
+            shotgun_ammo: [Build.AOE_God, Build.Close_Combat, Build.Sustain], 
+            rifle_ammo: [Build.Sustain, Build.Close_Combat, Build.AOE_God], 
+            magnum_ammo: [Build.Close_Combat, Build.AOE_God, Build.Sustain]
+            }
         
-        self.attache = attache(self.item_universe, self.board)
+        #self.attache = attache(self.item_universe, self.board)
         
 
         #index of current shape
@@ -726,7 +899,7 @@ class game_controller(object):
         place = [0, 0, 0, 0]
         #left, right, up, down
         cs = self.shape #current shape
-        cnt = WINX * MAXY
+        cnt = counter(WINX * MAXY)
         for shape in self.shapes:
             self.move_to_corner()
             while(cs.blocks[0].id == self.change_shape().blocks[0].id and cnt > 0):
@@ -742,24 +915,24 @@ class game_controller(object):
                 else:
                     self.move_to_edge()
                     place[0] = 0
-                cnt = cnt - 1
+                cnt.d()
             place[0] = 0
             place[2] = 0
-            cnt = WINX * MAXY
+            cnt.r()
             cs = self.shape
                 
     def move_to_edge(self):
-        cnt = 0
+        cnt = counter()
         while(cnt < MAXX):
             self.handle_move(LEFT)
-            cnt = cnt + 1
+            cnt.i()
             
     def move_to_corner(self):
-        cnt = MAXY * MAXX
+        cnt = counter(MAXY * MAXX)
         while (cnt > 0):
             self.handle_move(LEFT)
             self.handle_move(UP)
-            cnt = cnt - 1
+            cnt.d()
         
 
 if __name__ == '__main__':
