@@ -3,6 +3,7 @@
 
 from Tkinter import *
 from time import sleep
+from time import time
 import numpy as np
 from random import randint
 from random import randrange
@@ -157,7 +158,7 @@ class Board(Frame):
             
     def count_free_space(self):
         cnt = counter()
-        for i in collision_matrix:
+        for i in self.collision_matrix:
             for j in i:
                 if not j:
                     cnt.i()
@@ -722,7 +723,7 @@ class game_controller(object):
     Main game loop and receives GUI callback events for keypresses etc...
     """
 
-    def __init__(self, parent):
+    def __init__(self, parent, size=50):
         """
         Intialise the game...
         """
@@ -756,14 +757,13 @@ class game_controller(object):
             }
         
         self.shapes = []
-        for i in range(50):
+        for i in range(size):
             s = self.item_universe.keys()
             self.shapes.append(s[randint(0, len(s)-1)]())
         
         self.Builds = [Build.Sustain, Build.AOE_God, Build.Close_Combat]
         self.attache = attache(self.item_universe, self.Builds[randint(0, len(self.Builds)-1)], self.shapes)
         self.shapes = self.attache.reduce_and_sort()
-        print map(lambda i: i.name, self.shapes)
         
         
 
@@ -935,8 +935,22 @@ class game_controller(object):
         
 
 if __name__ == '__main__':
-    root = Tk()
-    root.title('Best thing EVER!!!!')
-    theGame = game_controller(root)
+    f = open("data.csv", 'w')
 
+    #root.title('Best thing EVER!!!!')
+    sizes = [50, 100, 200, 500, 1000]
+    f.write("item count, time, free space\n")
+    for size in sizes:
+        for i in range(10):
+            root = Tk()
+            t1 = time()
+            theGame = game_controller(root, size)
+            theGame.easy_place()
+            t2 = time()
+            line = "{0}, {1}, {2}\n".format(size, t2 - t1, theGame.board.count_free_space().value - ((MAXX - WINX) * MAXY))
+            print line
+            f.write(line)
+            root.destroy()
+    
+    
     root.mainloop()
