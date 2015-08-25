@@ -250,159 +250,7 @@ class Block(object):
         return (self.x, self.y)
 
 
-class shape(object):
-
-    def check_and_create(
-        self,
-        board,
-        coords,
-        colour,
-        ):
-        """
-        Check if the blocks that make the shape can be placed in empty coords
-        before creating and returning the shape instance. Otherwise, return
-        None.
-        """
-
-        for coord in coords:
-            if not board.check_block(coord):
-                return None
-
-        return shape(board, coords, colour)
-
-    def __init__(
-        self,
-        board,
-        coords,
-        colour
-        ):
-        """
-        Initialise the shape base.
-        """
-
-        self.board = board
-        self.blocks = []
-
-        for coord in coords:
-            block = Block(self.board.add_block(coord, colour), coord)
-
-            self.blocks.append(block)
-
-    def move(self, direction):
-        """
-        Move the blocks in the direction indicated by adding (dx, dy) to the
-        current block coordinates
-        """
-
-        (d_x, d_y) = direction_d[direction]
-
-        for block in self.blocks:
-
-            x = block.x + d_x
-            y = block.y + d_y
-
-            if not self.board.check_block((x, y)):
-                return False
-
-        for block in self.blocks:
-
-            x = block.x + d_x
-            y = block.y + d_y
-            self.board.move_block(block.id, (d_x, d_y), (block.x, block.y))
-
-            block.x = x
-            block.y = y
-
-        return True
-    
-    
-    def size(self):
-        return len(self.coords)
-
-    
-    def rotate(self, clockwise=True):
-        """
-        Rotate the blocks around the 'middle' block, 90-degrees. The
-        middle block is always the index 0 block in the list of blocks
-        that make up a shape.
-        """
-
-        # TO DO: Refactor for DRY
-
-        middle = self.blocks[0]
-        rel = []
-        for block in self.blocks:
-            rel.append((block.x - middle.x, block.y - middle.y))
-
-        # to rotate 90-degrees (x,y) = (-y, x)
-        # First check that the there are no collisions or out of bounds moves.
-
-        for idx in xrange(len(self.blocks)):
-            (rel_x, rel_y) = rel[idx]
-            if clockwise:
-                x = middle.x + rel_y
-                y = middle.y - rel_x
-            else:
-                x = middle.x - rel_y
-                y = middle.y + rel_x
-
-            if not self.board.check_block((x, y)):
-                return False
-
-        for idx in xrange(len(self.blocks)):
-            (rel_x, rel_y) = rel[idx]
-            if clockwise:
-                x = middle.x + rel_y
-                y = middle.y - rel_x
-            else:
-                x = middle.x - rel_y
-                y = middle.y + rel_x
-
-            diff_x = x - self.blocks[idx].x
-            diff_y = y - self.blocks[idx].y
-            self.board.move_block(self.blocks[idx].id, (diff_x, diff_y), (self.blocks[idx].x, self.blocks[idx].y))
-
-            self.blocks[idx].x = x
-            self.blocks[idx].y = y
-
-        return True
-
-
-class shape_limited_rotate(shape):
-
-    """
-    This is a base class for the shapes like the S, Z and I that don't fully
-    rotate (which would result in the shape moving *up* one block on a 180).
-    Instead they toggle between 90 degrees clockwise and then back 90 degrees
-    anti-clockwise.
-    """
-
-    def __init__(
-        self,
-        board,
-        coords,
-        colour,
-        ):
-
-        self.clockwise = True
-        super(shape_limited_rotate, self).__init__(board, 
-                                                   coords,
-                                                   colour)
-
-    def rotate(self, clockwise=True):
-        """
-        Clockwise, is used to indicate if the shape should rotate clockwise
-        or back again anti-clockwise. It is toggled.
-        """
-
-        super(shape_limited_rotate,
-              self).rotate(clockwise=self.clockwise)
-        if self.clockwise:
-            self.clockwise = False
-        else:
-            self.clockwise = True
-
-class shape_helper(shape):
+class shape_helper(object):
     
     @staticmethod
     def matrix_to_coords(matrix):
@@ -442,12 +290,148 @@ class shape_helper(shape):
     @staticmethod
     def mtc(matrix):
         return shape_helper.matrix_to_coords(matrix)
-                    
+    
+    
+class shape(object):
+
+    def check_and_create(
+        self,
+        board,
+        coords,
+        matrix,
+        colour,
+        ):
+        """
+        Check if the blocks that make the shape can be placed in empty coords
+        before creating and returning the shape instance. Otherwise, return
+        None.
+        """
+
+        for coord in coords:
+            if not board.check_block(coord):
+                return None
+
+        return shape(board, coords, matrix, colour)
+
+    def __init__(
+        self,
+        board,
+        coords,
+        matrix,
+        colour
+        ):
+        """
+        Initialise the shape base.
+        """
+
+        self.board = board
+        self.blocks = []
+        
+        self.matrix = matrix
+        self.max_width = self.max_width()
+        self.max_hieght = self.max_hieght()
+
+        for coord in coords:
+            block = Block(self.board.add_block(coord, colour), coord)
+
+            self.blocks.append(block)
+            
+            
+    def max_width(self):
+        return max(map(lambda a: len(a), self.matrix))
+    
+    def max_hieght(self):
+        return len(self.matrix)
+
+    def move(self, direction):
+        """
+        Move the blocks in the direction indicated by adding (dx, dy) to the
+        current block coordinates
+        """
+
+        (d_x, d_y) = direction_d[direction]
+
+        for block in self.blocks:
+
+            x = block.x + d_x
+            y = block.y + d_y
+
+            if not self.board.check_block((x, y)):
+                return False
+
+        for block in self.blocks:
+
+            x = block.x + d_x
+            y = block.y + d_y
+            self.board.move_block(block.id, (d_x, d_y), (block.x, block.y))
+
+            block.x = x
+            block.y = y
+
+        return True
+    
+    
+    def size(self):
+        return len(self.coords)
+
+    
+    def rotate(self, clockwise=True, ignore_bounds=False):
+        """
+        Rotate the blocks around the 'middle' block, 90-degrees. The
+        middle block is always the index 0 block in the list of blocks
+        that make up a shape.
+        """
+
+        # TO DO: Refactor for DRY
+
+        middle = self.blocks[0]
+        rel = []
+        for block in self.blocks:
+            rel.append((block.x - middle.x, block.y - middle.y))
+
+        # to rotate 90-degrees (x,y) = (-y, x)
+        # First check that the there are no collisions or out of bounds moves.
+
+        for idx in xrange(len(self.blocks)):
+            (rel_x, rel_y) = rel[idx]
+            if clockwise:
+                x = middle.x + rel_y
+                y = middle.y - rel_x
+            else:
+                x = middle.x - rel_y
+                y = middle.y + rel_x
+            
+            if not self.board.check_block((x, y)) and not ignore_bounds:
+                return False
+            
+
+        for idx in xrange(len(self.blocks)):
+            (rel_x, rel_y) = rel[idx]
+            if clockwise:
+                x = middle.x + rel_y
+                y = middle.y - rel_x
+            else:
+                x = middle.x - rel_y
+                y = middle.y + rel_x
+
+            diff_x = x - self.blocks[idx].x
+            diff_y = y - self.blocks[idx].y
+            self.board.move_block(self.blocks[idx].id, (diff_x, diff_y), (self.blocks[idx].x, self.blocks[idx].y))
+
+            self.blocks[idx].x = x
+            self.blocks[idx].y = y
+
+        return True
+    
+    def flip(self, clockwise=True):
+        self.rotate(clockwise, ignore_bounds=True)
+        self.rotate(clockwise, ignore_bounds=True)
+        
 
 class custom_shape(shape):
     
     def __init__(self, matrix, color=random_color()):
-        self.color = color
+        self.color = random_color()
         self.matrix = matrix
         self.coords = shape_helper.mtc(self.matrix)
         
@@ -455,14 +439,9 @@ class custom_shape(shape):
         if(self.color == None):
             self.color = random_color()
         return super(custom_shape, self).check_and_create(board, 
-                                                     self.coords, 
+                                                     self.coords,
+                                                     self.matrix,
                                                      self.color)
-    
-    def max_width(self):
-        return max(map(lambda a: len(a), self.matrix))
-    
-    def max_hieght(self):
-        return len(matrix)
 
 
 Item_Class = enum(
@@ -483,6 +462,9 @@ class game_item(custom_shape):
         self.fs = fs
         self.clip = clip
         self.uid = uid
+        self.color = random_color()
+        self.stack = stack
+        self.item_class = item_class
         super(game_item, self).__init__(shape_helper.string_to_matrix(dimensions))
         
     def __eq__(self, other):
@@ -490,9 +472,9 @@ class game_item(custom_shape):
         
 class stack_item(game_item):
     
-    def __init__(self, name, cost, stack, dimensions, item_class=Item_Class.WEAPON):
+    def __init__(self, name, cost, stack, dimensions="1x1", item_class=Item_Class.AMMO):
         self.current_size = 1
-        super(stack_item, self).__init__(self, name=name, cost=cost, stack=stack, dimensions="1x2")
+        super(stack_item, self).__init__(name=name, cost=cost, stack=stack, dimensions="1x1", item_class=Item_Class.AMMO)
         
     def push(self, item):
         rem = self.clip - self.stack
@@ -509,126 +491,107 @@ class weapon_item(game_item):
     
     def __init__(self, name, cost, dimensions, fp=-1, fs=-1, rs=-1, clip=-1, stack=-1, color=random_color(), uid=randint(1, 10000)):
         self.current_size = 1
-        super(stack_item, self).__init__(self, name=name, cost=cost, stack=stack, dimensions="1x2", item_class=Item_Class.WEAPON)
+        super(weapon_item, self).__init__(name=name, cost=cost, stack=stack, dimensions="1x1", item_class=Item_Class.WEAPON)
         
         
 class handgun(weapon_item):
     
     def __init__(self):
-        super(handgun, self).init__(self, "handgun", 198000, "3x2", 1.0, 0.47, 1.73, 10, handgun_ammo().name)
+        super(handgun, self).__init__("handgun", 198000, "3x2", 1.0, 0.47, 1.73, 10, handgun_ammo().name)
         
 class red9(game_item):
     
     def __init__(self):
-        super(red9, self).init__(self, "red9", 335000, "4x2", 1.6, 0.53, 2.73, 8, handgun_ammo().name)
+        super(red9, self).__init__("red9", 335000, "4x2", 1.6, 0.53, 2.73, 8, handgun_ammo().name)
         
 class shotgun(game_item):
     
     def __init__(self):
-        super(shotgun, self).init__(self, "shotgun", 257000, "8x2", 4.0, 1.53, 3.03, 6, shotgun_ammo().name)
+        super(shotgun, self).__init__("shotgun", 257000, "8x2", 4.0, 1.53, 3.03, 6, shotgun_ammo().name)
         
 class riotgun(game_item):
     
     def __init__(self):
-        super(riotgun, self).init__(self, "riotgun", 415000, "8x2", 5.0, 1.53, 3.03, 7, shotgun_ammo().name)
+        super(riotgun, self).__init__("riotgun", 415000, "8x2", 5.0, 1.53, 3.03, 7, shotgun_ammo().name)
         
 class rifle(game_item):
     
     def __init__(self):
-        super(rifle, self).init__(self, "rifle", 296000, "9x1", 4.0, 2.73, 4.0, 5, rifle_ammo().name)
+        super(rifle, self).__init__("rifle", 296000, "9x1", 4.0, 2.73, 4.0, 5, rifle_ammo().name)
         
 #semi-auto rifle
 class rifle_sauto(game_item):
     
     def __init__(self):
-        super(rifle_sauto, self).init__(self, "rifle_sauto", 361000, "7x2", 7.0, 1.43, 2.33, 10, rifle_ammo().name)
+        super(rifle_sauto, self).__init__("rifle_sauto", 361000, "7x2", 7.0, 1.43, 2.33, 10, rifle_ammo().name)
         
 class killer7(game_item):
     
     def __init__(self):
-        super(killer7, self).init__(self, "killer7", 77700, "4x2", 25.0, 0.7, 1.83, 7, magnum_ammo().name)
+        super(killer7, self).__init__("killer7", 77700, "4x2", 25.0, 0.7, 1.83, 7, magnum_ammo().name)
         
 class hand_cannon(game_item):
     
     def __init__(self):
-        super(hand_cannon, self).init__(self, "hand_cannon", 779000, "4x2", 30.0, 1.17, 3.67, 3, magnum_ammo().name)
+        super(hand_cannon, self).__init__("hand_cannon", 779000, "4x2", 30.0, 1.17, 3.67, 3, magnum_ammo().name)
                 
 class reg_grenade(game_item):
     
     def __init__(self):
-        super(reg_grenade, self).init__(self, "reg_grenade", 5000, "1x2", item_class=Item_Class.GRENADE)
+        super(reg_grenade, self).__init__("reg_grenade", 5000, "1x2", item_class=Item_Class.GRENADE)
         
 class flash_grenade(game_item):
     
     def __init__(self):
-        super(flash_grenade, self).init__(self, "flash_grenade", 5000, "1x2", item_class=Item_Class.GRENADE)
+        super(flash_grenade, self).__init__("flash_grenade", 5000, "1x2", item_class=Item_Class.GRENADE)
         
 class fire_grenade(game_item):
     
     def __init__(self):
-        super(fire_grenade, self).init__(self, "fire_grenade", 5000, "1x2", item_class=Item_Class.GRENADE)
+        super(fire_grenade, self).__init__("fire_grenade", 5000, "1x2", item_class=Item_Class.GRENADE)
         
 class first_aid_spray(game_item):
     
     def __init__(self):
-        super(first_aid_spray, self).init__(self, "first_aid_spray", 7500, "1x2", item_class=Item_Class.HERB)
+        super(first_aid_spray, self).__init__("first_aid_spray", 7500, "1x2", item_class=Item_Class.HERB)
         
 #health item
 class green_herb(game_item):
     
     def __init__(self):
-        super(green_herb, self).init__(self, "green_herb", 5000, "1x2", item_class=Item_Class.HERB)
+        super(green_herb, self).__init__("green_herb", 5000, "1x1", item_class=Item_Class.HERB)
         
 #combined herb
 class sweet_green_herb(game_item):
     
     def __init__(self):
-        super(sweet_green_herb, self).init__(self, "sweet_green_herb", 7500, "1x2", item_class=Item_Class.HERB)
+        super(sweet_green_herb, self).__init__("sweet_green_herb", 7500, "1x1", item_class=Item_Class.HERB)
         
 class handgun_ammo(stack_item):
     
     def __init__(self):
-        super(handgun_ammo, self).__init__("handgun_ammo", 100, 50)
+        super(handgun_ammo, self).__init__(name="handgun_ammo", cost=100, stack=50)
         
 class shotgun_ammo(stack_item):
     
     def __init__(self):
-        super(shotgun_ammo, self).__init__("shotgun_ammo", 333, 15)
+        super(shotgun_ammo, self).__init__(name="shotgun_ammo", cost=333, stack=15)
         
 class rifle_ammo(stack_item):
     
     def __init__(self):
-        super(rifle_ammo, self).__init__("rifle_ammo", 500, 10)
+        super(rifle_ammo, self).__init__(name="rifle_ammo", cost=500, stack=10)
         
 class magnum_ammo(stack_item):
     
     def __init__(self):
-        super(magnum_ammo, self).__init__("magnum_ammo", 500, 10)
-        
-    
-class square_shape(shape):
-
-    def __init__(self):
-        return
-    
-    def check_and_create(self, board):
-        coords = shape_helper.mtc([[1, 1],
-                                   [1, 1]])
-        return super(square_shape, self).check_and_create(board, coords,
-                'red')
-
-    def rotate(self, clockwise=True):
-        """
-        Override the rotate method for the square shape to do exactly nothing!
-        """
-        pass
+        super(magnum_ammo, self).__init__(name="magnum_ammo", cost=500, stack=10)
 
 
 class test_shape(custom_shape):
     
     def __init__(self):
-        super(test_shape, self).__init__(shape_helper.string_to_matrix('4x2'))
-        
+        super(test_shape, self).__init__(shape_helper.string_to_matrix('3x2'))        
 
 Build = enum(
 	AOE_God=1, #lots of AOE damage
@@ -638,7 +601,7 @@ Build = enum(
     
 class attache(object):
     
-    def __init__(self, item_universe, build, board, items):
+    def __init__(self, item_universe, build, items):
 		self.items = items
 		self.build = build
 		self.item_universe = item_universe
@@ -705,23 +668,27 @@ class attache(object):
             ls = il[key]
             if len(ls) > 0:
                 if key == Item_Class.WEAPON:
-                    tmp = self.optomize(ls, int(size/2))
-                    size.d(total_weight(tmp)
+                    tmp = self.optomize(ls, int(size.value/2))
+                    size.d(self.total_weight(tmp))
                     result = result + tmp[0:2]
                 elif key == Item_Class.AMMO:
-                    tmp = self.optomize(ls, int(size/2))
-                    size.d(total_weight(tmp)
+                    tmp = self.optomize(ls, int(size.value/2))
+                    size.d(self.total_weight(tmp))
                     result = result + tmp
                 elif key == Item_Class.HERB:
-                    tmp = self.optomize(ls, int(size/2)
-                    size.d(total_weight(tmp)
+                    tmp = self.optomize(ls, int(size.value/2))
+                    size.d(self.total_weight(tmp))
                     result = result + tmp
                 elif key == Item_Class.GRENADE:
                     tmp = self.optomize(ls, size)
-                    size.d(total_weight(tmp)
+                    size.d(self.total_weight(tmp))
                     result = result + tmp
+        return result
                     
                     
+    def total_weight(self, item_list):
+        return sum(map(lambda i: i.size(), item_list))
+    
     def optomize(self, item_list, max_wieght):
         ls = []
         for i in range(len(item_list)):
@@ -732,7 +699,10 @@ class attache(object):
             else:
                 for j in range(len(ls)):
                     key2 = ls[j].__class__
-                    if self.item_universe[key].index(item.item_class) < self.item_universe[key2].index(ls[j].item_class):
+                    if self.item_universe[key] == []:
+                        ls.append(item)
+                        break
+                    if self.item_universe[key].index(self.build) < self.item_universe[key2].index(self.build):
                         ls.insert(j, item)
                         break
                     elif j == (len(ls) - 1):
@@ -741,8 +711,6 @@ class attache(object):
             ls.pop()
         return ls
     
-    def total_weight(self, item_list):
-        return sum(map(lambda i: i.size))
                        
                         
     
@@ -765,11 +733,6 @@ class game_controller(object):
 
         self.board = Board(parent, scale=SCALE, max_x=MAXX, max_y=MAXY,
                            offset=OFFSET)
-        
-        # lookup table
-        self.shapes = [test_shape()]
-        for i in range(40):
-            self.shapes.append(test_shape())
             
         self.item_universe = {
             handgun: [Build.Sustain, Build.Close_Combat, Build.AOE_God], 
@@ -792,7 +755,16 @@ class game_controller(object):
             magnum_ammo: [Build.Close_Combat, Build.AOE_God, Build.Sustain]
             }
         
-        #self.attache = attache(self.item_universe, self.board)
+        self.shapes = []
+        for i in range(50):
+            s = self.item_universe.keys()
+            self.shapes.append(s[randint(0, len(s)-1)]())
+        
+        self.Builds = [Build.Sustain, Build.AOE_God, Build.Close_Combat]
+        self.attache = attache(self.item_universe, self.Builds[randint(0, len(self.Builds)-1)], self.shapes)
+        self.shapes = self.attache.reduce_and_sort()
+        print map(lambda i: i.name, self.shapes)
+        
         
 
         #index of current shape
@@ -811,6 +783,7 @@ class game_controller(object):
         self.parent.bind('p', self.p_callback)
         self.parent.bind('x', self.x_callback)
         self.parent.bind('z', self.z_callback)
+        self.parent.bind('f', self.f_callback)
 
         self.shape = self.get_next_shape()
 
@@ -865,6 +838,9 @@ class game_controller(object):
         
     def z_callback(self, event):
         self.move_to_corner()
+        
+    def f_callback(self, event):
+        self.corner_flip()
 
     def move_my_shape(self):
         if self.shape:
@@ -900,10 +876,13 @@ class game_controller(object):
         #left, right, up, down
         cs = self.shape #current shape
         cnt = counter(WINX * MAXY)
+        flip = False
         for shape in self.shapes:
             self.move_to_corner()
+            if flip:
+                self.corner_flip()
             while(cs.blocks[0].id == self.change_shape().blocks[0].id and cnt > 0):
-                if(place[0] <= WINX - 5):
+                if(place[0] <= WINX - (self.shape.max_width + 1)):
                 #if(place[0] <= WINX):
                     self.handle_move(RIGHT)
                     place[0] = place[0] + 1
@@ -919,6 +898,7 @@ class game_controller(object):
             place[0] = 0
             place[2] = 0
             cnt.r()
+            flip = not flip
             cs = self.shape
                 
     def move_to_edge(self):
@@ -933,6 +913,20 @@ class game_controller(object):
             self.handle_move(LEFT)
             self.handle_move(UP)
             cnt.d()
+            
+    def corner_flip(self):
+        self.move_to_corner()
+        for i in range(self.shape.max_width):
+            self.handle_move(RIGHT)
+        for i in range(self.shape.max_hieght):
+            self.handle_move(DOWN)
+        self.shape.flip()
+        self.move_to_corner()
+        
+    def edge_flip(self, y):
+        self.corner_flip()
+        for i in y:
+            self.handle_move(DOWN)
         
 
 if __name__ == '__main__':
