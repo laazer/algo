@@ -19,6 +19,7 @@ Running 'python project.py -g' will preform a GUI run
 - Down => move piece down
 - Left => move piece left
 - Right => move piece right
+- Space => place piece
 - a => rotate piece clockwise
 - s => rotate piece counterclockwise
 - x => run placement algorithm
